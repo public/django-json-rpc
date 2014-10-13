@@ -211,7 +211,7 @@ class JSONRPCSite(object):
         valid, D = self.validate_get(request, method)
         if not valid:
           raise InvalidRequestError('The method you are trying to access is '
-                                    'not availble by GET requests')
+                                    'not available by GET requests')
       elif not request.method.lower() == 'post':
         raise RequestPostError
       else:
