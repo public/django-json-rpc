@@ -351,7 +351,23 @@ class JSONRPCTest(unittest.TestCase):
       self.proxy20.jsonrpc.testAuth(
         username='sammeh', password='password', string=u'this is a string')[u'result'],
       u'this is a string')
-  
+
+  def test_authenticated_fail_missing_password(self):
+    try:
+      self.proxy20.jsonrpc.testAuth(username='sammeh', string=u'this is a string')
+    except IOError, e:
+      self.assertEquals(e.args[1], 401)
+    else:
+      self.assert_(False, 'Didnt return status code 401 on unauthorized access')
+
+  def test_authenticated_fail_missing_username(self):
+    try:
+      self.proxy20.jsonrpc.testAuth(password='password', string=u'this is a string')
+    except IOError, e:
+      self.assertEquals(e.args[1], 401)
+    else:
+      self.assert_(False, 'Didnt return status code 401 on unauthorized access')
+
   def test_authenticated_fail_kwargs(self):
     try:
       self.proxy20.jsonrpc.testAuth(

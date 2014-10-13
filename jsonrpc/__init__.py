@@ -183,13 +183,18 @@ def jsonrpc_method(name, authenticated=False,
         from django.contrib.auth.models import User
       else:
         authenticate = authenticated
+
       @wraps(func)
       def _func(request, *args, **kwargs):
         user = getattr(request, 'user', None)
         is_authenticated = getattr(user, 'is_authenticated', lambda: False)
-        if ((user is not None
-              and callable(is_authenticated) and not is_authenticated())
-            or user is None):
+        if (
+            (
+              user is not None and
+              callable(is_authenticated) and not is_authenticated()
+            ) or
+            user is None
+        ):
           user = None
           try:
             creds = args[:len(authentication_arguments)]
@@ -203,26 +208,30 @@ def jsonrpc_method(name, authenticated=False,
             if user is not None:
               args = args[len(authentication_arguments):]
           except IndexError:
-              auth_kwargs = {}
-              try:
-                for auth_kwarg in authentication_arguments:
-                  auth_kwargs[auth_kwarg] = kwargs[auth_kwarg]
-              except KeyError:
-                raise InvalidParamsError(
-                  'Authenticated methods require at least '
-                  '[%s] or {%s} arguments', authentication_arguments)
+            auth_kwargs = {}
+            try:
+              for auth_kwarg in authentication_arguments:
+                auth_kwargs[auth_kwarg] = kwargs[auth_kwarg]
+            except KeyError:
+              raise InvalidParamsError(
+                'Authenticated methods require at least '
+                '[%s] or {%s} arguments', authentication_arguments)
 
-              user = _authenticate(**auth_kwargs)
-              if user is None and "username" in auth_kwargs:
-                  auth_kwargs["email"] = auth_kwargs["username"]
-                  del auth_kwargs["username"]
-                  user = _authenticate(**auth_kwargs)
+            user = _authenticate(**auth_kwargs)
+            if user is None and "username" in auth_kwargs:
+                auth_kwargs["email"] = auth_kwargs["username"]
+                del auth_kwargs["username"]
+                user = _authenticate(**auth_kwargs)
 
-              if user is not None:
-                for auth_kwarg in authentication_arguments:
-                  kwargs.pop(auth_kwarg)
+            if user is not None:
+              for auth_kwarg in authentication_arguments:
+                kwargs.pop(auth_kwarg)
+
           if user is None:
-            raise InvalidCredentialsError
+            raise InvalidCredentialsError(
+              'Authenticated methods require at least '
+              '[username, password] or {username: password:} arguments')
+
           request.user = user
         return func(request, *args, **kwargs)
     else:
