@@ -12,6 +12,10 @@ except (NameError, ImportError):
   csrf_exempt = empty_dec
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.conf import settings
+
+#allow not to log certain errors, by specyfying class names
+HANDLED_ERRORS = getattr(settings, 'JSONRPC_HANDLED_ERRORS', [])
 
 NoneType = type(None)
 encode_kw = lambda p: dict([(str(k), v) for k, v in p.iteritems()])
@@ -172,14 +176,16 @@ class JSONRPCSite(object):
       status = 200
     
     except Error, e:
-      signals.got_request_exception.send(sender=self.__class__, request=request)
+      if not e.__class__.__name__ in HANDLED_ERRORS:
+        signals.got_request_exception.send(sender=self.__class__, request=request)
       response['error'] = e.json_rpc_format
       if version in ('1.1', '2.0') and 'result' in response:
         response.pop('result')
       status = e.status
     except Exception, e:
       # exception missed by others
-      signals.got_request_exception.send(sender=self.__class__, request=request)
+      if not e.__class__.__name__ in HANDLED_ERRORS:
+        signals.got_request_exception.send(sender=self.__class__, request=request)
       other_error = OtherError(e)
       response['error'] = other_error.json_rpc_format
       status = other_error.status
@@ -224,13 +230,15 @@ class JSONRPCSite(object):
       
       json_rpc = dumps(response, cls=json_encoder)
     except Error, e:
-      signals.got_request_exception.send(sender=self.__class__, request=request)
+      if not e.__class__.__name__ in HANDLED_ERRORS:
+        signals.got_request_exception.send(sender=self.__class__, request=request)
       response['error'] = e.json_rpc_format
       status = e.status
       json_rpc = dumps(response, cls=json_encoder)
     except Exception, e:
       # exception missed by others
-      signals.got_request_exception.send(sender=self.__class__, request=request)
+      if not e.__class__.__name__ in HANDLED_ERRORS:
+        signals.got_request_exception.send(sender=self.__class__, request=request)
       other_error = OtherError(e)
       response['result'] = None
       response['error'] = other_error.json_rpc_format

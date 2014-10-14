@@ -192,12 +192,15 @@ def jsonrpc_method(name, authenticated=False, safe=False, validate=False,
           user = None
           try:
             creds = args[:2]
-            user = authenticate(username=creds[0], password=creds[1])
+            user = authenticate(username=creds[0], password=creds[1]) or \
+                   authenticate(email=creds[0],    password=creds[1])
             if user is not None:
               args = args[2:]
           except IndexError: 
             if 'username' in kwargs and 'password' in kwargs:
               user = authenticate(username=kwargs['username'],
+                                  password=kwargs['password']) or \
+                     authenticate(email=kwargs['username'],
                                   password=kwargs['password'])
               if user is not None:
                 kwargs.pop('username')

@@ -71,6 +71,7 @@ class InvalidParamsError(Error):
   """ Invalid method parameters. """
   code = -32602
   message = _('Invalid params.')
+  status = 400
   
 class ServerError(Error):
   """ Internal JSON-RPC error. """
