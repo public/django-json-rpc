@@ -32,12 +32,12 @@ def _eval_arg_type(arg_type, T=Any, arg=None, sig=None):
   """
   Returns a type from a snippet of python source. Should normally be
   something just like 'str' or 'Object'.
-  
+
     arg_type      the source to be evaluated
     T             the default type
     arg           context of where this type was extracted
     sig           context from where the arg was extracted
-  
+
   Returns a type or a Type
   """
   try:
@@ -57,10 +57,10 @@ def _parse_sig(sig, arg_names, validate=False):
   Numerically-indexed arguments that do not correspond to an argument
   name in python (ie: it takes a variable number of arguments) will be
   keyed as the stringified version of it's index.
-  
+
     sig         the signature to be parsed
     arg_names   a list of argument names extracted from python source
-  
+
   Returns a tuple of (method name, types dict, return type)
   """
   d = SIG_RE.match(sig)
@@ -92,8 +92,8 @@ def _parse_sig(sig, arg_names, validate=False):
           ret[i] = (ret[i][0], _eval_arg_type(arg, None, arg, sig))
   if not type(ret) is SortedDict:
     ret = SortedDict(ret)
-  return (d['method_name'], 
-          ret, 
+  return (d['method_name'],
+          ret,
           (_eval_arg_type(d['return_sig'], Any, 'return', sig)
             if d['return_sig'] else Any))
 
@@ -102,16 +102,16 @@ def _inject_args(sig, types):
   A function to inject arguments manually into a method signature before
   it's been parsed. If using keyword arguments use 'kw=type' instead in
   the types array.
-    
+
     sig     the string signature
     types   a list of types to be inserted
-    
+
   Returns the altered signature.
   """
   if '(' in sig:
     parts = sig.split('(')
     sig = '%s(%s%s%s' % (
-      parts[0], ', '.join(types), 
+      parts[0], ', '.join(types),
       (', ' if parts[1].index(')') > 0 else ''), parts[1]
     )
   else:
@@ -126,19 +126,19 @@ def jsonrpc_method(name, authenticated=False,
   to the function specific to the JSON-RPC machinery and adds it to the default
   jsonrpc_site if one isn't provided. You must import the module containing
   these functions in your urls.py.
-  
+
     name
-        
+
         The name of your method. IE: `namespace.methodName` The method name
         can include type information, like `ns.method(String, Array) -> Nil`.
 
-    authenticated=False   
+    authenticated=False
 
-        Adds `username` and `password` arguments to the beginning of your 
-        method if the user hasn't already been authenticated. These will 
-        be used to authenticate the user against `django.contrib.authenticate` 
-        If you use HTTP auth or other authentication middleware, `username` 
-        and `password` will not be added, and this method will only check 
+        Adds `username` and `password` arguments to the beginning of your
+        method if the user hasn't already been authenticated. These will
+        be used to authenticate the user against `django.contrib.authenticate`
+        If you use HTTP auth or other authentication middleware, `username`
+        and `password` will not be added, and this method will only check
         against `request.user.is_authenticated`.
 
         You may pass a callable to replace `django.contrib.auth.authenticate`
@@ -147,13 +147,13 @@ def jsonrpc_method(name, authenticated=False,
 
     safe=False
 
-        Designates whether or not your method may be accessed by HTTP GET. 
+        Designates whether or not your method may be accessed by HTTP GET.
         By default this is turned off.
-    
+
     validate=False
 
-        Validates the arguments passed to your method based on type 
-        information provided in the signature. Supply type information by 
+        Validates the arguments passed to your method based on type
+        information provided in the signature. Supply type information by
         including types in your method declaration. Like so:
 
         @jsonrpc_method('myapp.specialSauce(Array, String)', validate=True)
@@ -161,15 +161,15 @@ def jsonrpc_method(name, authenticated=False,
           return SpecialSauce(ingredients, instructions)
 
         Calls to `myapp.specialSauce` will now check each arguments type
-        before calling `special_sauce`, throwing an `InvalidParamsError` 
+        before calling `special_sauce`, throwing an `InvalidParamsError`
         when it encounters a discrepancy. This can significantly reduce the
         amount of code required to write JSON-RPC services.
-    
+
     site=default_site
-        
-        Defines which site the jsonrpc method will be added to. Can be any 
+
+        Defines which site the jsonrpc method will be added to. Can be any
         object that provides a `register(name, func)` method.
-    
+
   """
   def decorator(func):
     arg_names = getargspec(func)[0][1:]
@@ -183,12 +183,12 @@ def jsonrpc_method(name, authenticated=False,
         from django.contrib.auth.models import User
       else:
         authenticate = authenticated
-      @wraps(func)  
+      @wraps(func)
       def _func(request, *args, **kwargs):
         user = getattr(request, 'user', None)
         is_authenticated = getattr(user, 'is_authenticated', lambda: False)
-        if ((user is not None 
-              and callable(is_authenticated) and not is_authenticated()) 
+        if ((user is not None
+              and callable(is_authenticated) and not is_authenticated())
             or user is None):
           user = None
           try:
@@ -202,7 +202,7 @@ def jsonrpc_method(name, authenticated=False,
             )
             if user is not None:
               args = args[len(authentication_arguments):]
-          except IndexError: 
+          except IndexError:
               auth_kwargs = {}
               try:
                 for auth_kwarg in authentication_arguments:
