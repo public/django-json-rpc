@@ -213,9 +213,9 @@ def jsonrpc_method(name, authenticated=False,
               for auth_kwarg in authentication_arguments:
                 auth_kwargs[auth_kwarg] = kwargs[auth_kwarg]
             except KeyError:
-              raise InvalidParamsError(
+              raise InvalidCredentialsError(
                 'Authenticated methods require at least '
-                '[%s] or {%s} arguments', authentication_arguments)
+                '[username, password] or {username: password:} arguments')
 
             user = _authenticate(**auth_kwargs)
             if user is None and "username" in auth_kwargs:
