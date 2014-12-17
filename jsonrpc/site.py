@@ -175,14 +175,12 @@ class JSONRPCSite(object):
       status = 200
     
     except Error, e:
-      signals.got_request_exception.send(sender=self.__class__, request=request)
       response['error'] = e.json_rpc_format
       if version in ('1.1', '2.0') and 'result' in response:
         response.pop('result')
       status = e.status
     except Exception, e:
       # exception missed by others
-      signals.got_request_exception.send(sender=self.__class__, request=request)
       other_error = OtherError(e)
       response['error'] = other_error.json_rpc_format
       status = other_error.status
